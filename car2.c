@@ -6,10 +6,10 @@ typedef unsigned char uc;
 sbit R=P1^7;
 sbit G=P3^1;
 sbit B=P3^3;
-sbit TRIGL=P0^3;
-sbit TRIGR=P0^5;
-sbit ECHOL=P0^4;
-sbit ECHOR=P0^6;
+sbit TRIGL=P0^5;
+sbit TRIGR=P0^4;
+sbit ECHOL=P0^6;
+sbit ECHOR=P0^3;
 sbit leftlight=P3^4;
 sbit rightlight=P3^5;
 sbit x1=P2^0;//因故障原因已不用
@@ -26,21 +26,25 @@ sbit z_left=P1^1;
 sbit z_right=P1^4;
 sbit f_left=P1^2;
 sbit f_right=P1^5;
+void Display(uc first,uc second,uc third,uc forth);
 uc number[10]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f};
 uc modal=0;
 uc path[20];
 uc searched=0;
 unsigned char timer_s=0;
 unsigned int timer_ms=0;
+unsigned int timer_newms=1;
 unsigned int lasttimer=0;
 uc i=0,j=0;
 uc hashmap[5][5];
 void modal1();
 void modal2();
 void modal3();
-void modal4();
+void modal4();//模式4一分为三
 void modal5();
-void(*realmodal[5])()={modal1,modal2,modal3,modal4,modal5};
+void modal6();
+void modal7();
+void(*realmodal[7])()={modal1,modal2,modal3,modal4,modal5,modal6,modal7};
 void light(uc alight);
 const uc speed=25;
 void forward()
@@ -107,29 +111,40 @@ void Delay(uc i)
 	for(;i>0;i--)
 	_nop_();
 }
-void turn_left_90()   //??????90?
+void turn_left_90()  
 {
-	//static int x=0;
-	turnleft();
+	unsigned int newlasttimer=timer_ms;
+	while(timer_ms-newlasttimer<=700)
+	{
+		turnleft();
+		Display(0x38/*L*/,0x79/*E*/,0x71/*F*/,0x07/*T*/);
+	}
 }
-void turn_right_90()   //??????90?
+void turn_right_90()   
 {
-	//static int y=0;
-	turnright();
+	unsigned int newlasttimer=timer_ms;
+	while(timer_ms-newlasttimer<=700)
+	{
+		turnright();
+		Display(0x7b/*R*/,0x06/*I*/,0x3b/*G*/,0x76/*H*/);
+	}
 }
 uc search()
 {
-	uc k=0,f=0;
+	lasttimer=timer_ms;
+	while(1)
+	{
+		
 	for(;i<5;)
 	{
 		if(i%2)
 		{
 			j=4;
+			Display(number[0],number[i+1],number[0],number[j+1]);
+			while(timer_ms-lasttimer<1000)
 			forward();
-			if(lasttimer-timer_ms>100)
-			{
 				j--;
-			}
+				lasttimer=timer_ms;
 			if(leftlight==1||rightlight==1)
 			{
 				hashmap[i][j-1]=1;
@@ -137,21 +152,21 @@ uc search()
 			}
 			if(j==0)
 			{
+				lasttimer=timer_ms;
 				turn_right_90();
-				for(;f<10;f++)
+				while(timer_ms-lasttimer<1000)
 				forward();
-				i++;
 				turn_right_90();
 			}	
 		}
 		else 
 		{
 			j=0;
+			Display(number[0],number[i+1],number[0],number[j+1]);
+			while(timer_ms-lasttimer<1000)
 			forward();
-			if(lasttimer-timer_ms>100)
-			{
 				j++;
-			}
+				lasttimer=timer_ms;
 			if(leftlight==1||rightlight==1)
 			{
 				hashmap[i][j+1]=1;
@@ -160,15 +175,12 @@ uc search()
 			if(j==4)
 			{
 				turn_left_90();
-				for(;k<10;k++)
-				forward();
-				i++;
-				turn_left_90();
 			}
 		}
 	}
 	if(i==4&&j==4)return 0;
 	return 1;
+	}
 } 
 void _start(void)
 {
@@ -269,97 +281,92 @@ void light(uc light)
 }
 void Display_1()
 {
-	uc left,right;
+	uc left=0x00,right=0x00;
 	if(leftlight==0)
 		{
-			left+=0x01;
+			left|=0x01;
 		}
-		else
-		{
-			left-=0x01;
-		}			
 		if(rightlight==0)
 		{
-			right+=0x01;
-		}
-		else
-		{
-			right-=0x01;
+			right|=0x01;
 		}
 		Display(left,right,number[timer_s/10],number[timer_s%10]);
 }
 void Display_2()
 {
-	uc left,right;
+	uc left=0x00,right=0x00;
 	if(leftlight==0)
 		{
-			left+=0x01;
-		}
-		else
-		{
-			left-=0x00;
-		}			
+			left|=0x01;
+		}	
 		if(rightlight==0)
 		{
-			right+=0x01;
-		}
-		else
-		{
-			right-=0x01;
+			right|=0x01;
 		}
 		if(ECHOL==0)
 		{
-			left+=0x30;
-		}
-		else
-		{
-			left-=0x30;
+			left|=0x30;
 		}
 		if(ECHOR==0)
 		{
-			right+=0x06;
-		}
-		else
-		{
-			right-=0x06;
+			right|=0x06;
 		}
 		Display(left,right,number[timer_s/10],number[timer_s%10]);
 }
 void open_timer()
 {
 	TMOD|=0x01;
-	TH0=56320%256;
-	TL0=56320/256;
-	TR0=1;   //???16??????
+	TH0=56320/256;
+	TL0=56320%256;
+	TR0=1;   
+}
+void open_another_timer()
+{
+	TMOD|=0x01;
+	TH1=64536/256;
+	TL1=64536%256;
+	ET1=1;
+	TR1=1;
 }
 void open_main_shutdown()
 {
 	IE=0x83;
 	TCON=0x01;
 }
-int main()
+void open_board()
 {
-	open_timer();
-	open_main_shutdown();
 	_start();
 	write_hand(0x40);      //  0100 0000
 	cask();
 	_stop();
+}
+int main()
+{
+	open_main_shutdown();
+	open_timer();
+	open_board();
 	while(1)
 	{
+		if(modal==2)
+		{
+			open_another_timer();
+		}
 		realmodal[modal]();
 	}
 }
 void pressbutton() interrupt 0    //P3.2
 {
 	modal++;
-	if(modal==4)modal=0;
+	if(modal==7)modal=0;
+	Display(0x00,0x00,0x00,number[modal+1]);
 }
 void enter_timer() interrupt 1
 {
-	static char c;
-	TH0=56320/256;	 //??????
+	static unsigned char c=0;
+	TMOD|=0x01;
+	TH0=56320/256;
 	TL0=56320%256;
+	TR0=1;
 	c++;
 	timer_ms+=10;
 	if(c==100)
@@ -367,7 +374,15 @@ void enter_timer() interrupt 1
 		timer_s+=1;
 		c=0;
 	}
-
+}
+void enter_another_timer() interrupt 3
+{
+	TMOD|=0x01;
+	TH1=64536/256;
+	TL1=64536%256;
+	TR1=1;
+	timer_newms+=1;    //每次1ms
+	Display(number[0],number[0],number[0],number[timer_newms%10]);
 }
 void dog_machine()         //机器狗 
 {
@@ -397,7 +412,7 @@ void dog_machine()         //机器狗
 		}
 	}
 }
-void DFS(uc i,uc j)
+void DFS()
 {
 	//有向图
 	if(i==4&&j==4)return; 
@@ -406,12 +421,12 @@ void DFS(uc i,uc j)
 		if(j!=4)
 		{
 			path[i]='B';
-			DFS(i,j+1);
+			DFS();
 		}
 		if(i!=4)
 		{
 			path[i]='A';
-			DFS(i+1,j);
+			DFS();
 			i++;
 		}
 	}
@@ -422,6 +437,10 @@ void sound_init()
 {
 	TRIGL=1;
 	TRIGR=1;
+	Delay(15);
+	TRIGL=0;
+	TRIGR=0;
+
 }
 void sound_and_light()
 {
@@ -444,50 +463,50 @@ void sound_and_light()
 }
 void modal1()   //红外线
 {
+	/*sound_init();
+	Delay(10);
+	Display_2();*/
 	move();
 	Display_1();
 }
 void modal2()  //红外线+超声波
 {
 	sound_init();
-	Delay(10);
 	sound_and_light();
 	Display_2();
 }
 void modal3()  //超声波测距
 {
-	uc lefts,rights;
+	unsigned int s=0,bai=0,shi=0;
 	sound_init();
-	Delay(10);
-	lasttimer=timer_ms;
-			while(ECHOL==0)
+	lasttimer=timer_newms;
+	light('R');
+	while(timer_newms-lasttimer<=20)
+	{
+		light('W');
+			if(ECHOL==0)
 			{
-				lefts=17*(timer_ms-lasttimer);
-				if(lefts>=99)lefts=99;
+				s=17*(timer_ms-lasttimer);
+				light('G');
 			}
-			while(ECHOR==0)
-			{
-				rights=17*(timer_ms-lasttimer);
-				if(rights>=99)rights=99;
-			}
-			Display(number[lefts/10],number[lefts%10],number[rights/10],number[rights%10]);
+	}
+	bai=s%1000;
+	shi=bai%100;
+	Display(number[s/1000],number[bai/100],number[shi/10],number[shi%10]);
 }
 void modal4()  //DFS
 {
-	if(searched==0)
-	{
-		search();
-	}
-	if(searched==1)
-	{
-		DFS(i,j);
-	}
-	if(searched==2)
-	{
-		dog_machine();
-	}
+	search();
 }
 void modal5()
 {
 	stop();
+}
+void modal6()
+{
+	DFS();
+}
+void modal7()
+{
+	dog_machine();
 }
