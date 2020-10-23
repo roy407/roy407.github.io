@@ -2,11 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>关某人的大学生活</title>
+    <title>My Place</title>
+    <style>
+        #tempory{
+            width:200px;
+            height:200px;
+            background-color:aqua;
+        }
+    </style>
+    <script type="text/javascript">
+        function f() {
+            var g = document.getElementById(menu);
+            if (g.style.display == 'none') g.style.display = "block"
+            else g.style.display = 'none';
+        }
+    </script>
 </head>
 <body background="background.jpg">
     <marquee behavior="alternative" bgcolor="#99CCFF"><font color="#FF0000">欢迎你，陌生人</font></marquee>
-    <!--<iframe src="http://www.baidu.com" width="600" height="800"></iframe>-->
+    <div id="tempory">
+    <a href="./kechixu.ppt">可持续发展PPT</a>
+    </div>
+    <input type="button" value="点击显示剩余内容" onclick="f()"/>
+    <div id="menu" hidden>
     <h1>学习</h1>
     <h2>大一上半学期</h2>
     <h3><a href="./gongshu1.html">工科数学分析（一）</a></h3>
@@ -30,5 +48,6 @@
     <a href="./znsixiang.html"><h3>智能小车思想</h3></a>
     <a href="./zndaima.html"><h3>智能小车代码</h3></a>
     <a href="./dabian.html"><h3>答辩临时链接</h3></a>
+    </div>
 </body>
 </html>
