@@ -13,8 +13,12 @@
     <script type="text/javascript">
         function f() {
             var g = document.getElementById('menu');
-            if (g.style.display == 'none') g.style.display = "block"
-            else g.style.display = 'none';
+            var p = document.getElementsByTagName('input');
+            if (g.style.display == 'none') {
+                g.style.display = "block";
+                p[0].value = "点击关闭隐藏内容";
+            }
+            else { g.style.display = 'none'; }
         }
     </script>
 </head>
